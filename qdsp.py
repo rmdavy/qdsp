@@ -10,7 +10,6 @@
 import os, signal
 
 def main():
-	spnslist = []
 	spn_usernames = []
 
 	global DumpFolder
@@ -49,12 +48,15 @@ def main():
 					#Close handle
 				fout.close()
 		
+		print("[*]Number of SPN's in file "+str(len(spn_usernames)))
 		#Print output details
-		print("[*]Check "+DumpFolder+" for parsed output.")
+		print("[*]Check "+DumpFolder+" for parsed output.\n")
+		print("[*]Individual users hash written to file:")
 		#print list of filenames that have been written
 		for u in spn_usernames:
 			print(DumpFolder+u+".txt")
 
+		print("\n[*]Usernames written to file:")
 		print(DumpFolder+"spn_usernames.txt") 
 
 	else:
