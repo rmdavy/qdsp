@@ -11,11 +11,12 @@ import os, signal
 
 def main():
 	spn_usernames = []
-
+	da_list = []
 	global DumpFolder
 
 	os.system('clear')
 	print("Quick and Dirty SPN Parser - by Rich Davy")
+	print("Version 0.1")
 	print("@rd_pentest\n")
 	DumpFolder=input ("[*]Please enter folder location of spns.txt file to process: ") or (os.getcwd())
 
@@ -58,6 +59,17 @@ def main():
 
 		print("\n[*]Usernames written to file:")
 		print(DumpFolder+"spn_usernames.txt") 
+
+		if os.path.isfile(DumpFolder+"/domain_admins.txt"):
+			print("\n[*]domain_admins.txt file found in "+DumpFolder)
+			with open(DumpFolder+"/domain_admins.txt") as fp:
+				for line in fp:
+					da_list.append(line)
+
+			for uname in spn_usernames:
+				for da in da_list:
+					if uname.rstrip()==da.rstrip():
+						print(uname +" is a Domain Admin")
 
 	else:
 		print("[!]spns.txt not found")
