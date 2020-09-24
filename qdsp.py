@@ -1,86 +1,76 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
-#Quick and Dirty SPN Parser
-#Takes list of SPNS normally from Impacket output 
-#https://github.com/SecureAuthCorp/impacket/blob/master/examples/GetUserSPNs.py
-#and parses them
-#Outputs SPNS's to individual file with username as filename
-#Also outputs a list of usernames, handy for reporting purposes.
+import argparse
 
-import os, signal
+#Define list which we'll use to write to file
+output = []
 
-def main():
-	spn_usernames = []
-	da_list = []
-	global DumpFolder
+try:
+	#Get file to parse from the command line
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--spnfile", help="list of spns to parse")
+	#Add option to be able to output results to folder
+	parser.add_argument("--privusers", help="list of privileged user accounts", type=str, default="", required=False)
 
-	os.system('clear')
-	print("Quick and Dirty SPN Parser - by Rich Davy")
-	print("Version 0.1")
-	print("@rd_pentest\n")
-	DumpFolder=input ("[*]Please enter folder location of spns.txt file to process: ") or (os.getcwd())
+	args = parser.parse_args()
 
-	if os.path.isfile(DumpFolder+"/spns.txt"):
-		print("[*]spns.txt file found")
-		with open(DumpFolder+"/spns.txt") as fp:
-			for line in fp:
-				#get start position of username
-				unamestart=line.find("$krb5tgs$23$*")+13
-				#get end of username
-				uanmeend=line.find('$',unamestart)
-				#cut out username
-				uname=line[unamestart:uanmeend]
+	#Display banner
+	print("\n[*] Quick and Dirty SPN Parser")
+	print("[*] Richard Davy, ECSC plc - 2020\n")
+
+	#Read in file to parse
+	with open(args.spnfile, 'r') as f:
+		contents = f.read().splitlines()
+
+	print("[*] Number of SPN's found is ",len(contents))
+	print("[*] Parsed files will be written to /tmp/\n")
+
+	#
+	#Parse all the SPN's and write each one individually to file
+	#
+	for c in contents:
+		#Get username from string
+		cusername=c.split("$")[3][1:]
 				
-				#Create a list of SPN usernames
-				spn_usernames.append(uname)
+		try:
+			#Open file handler
+			with open("/tmp/"+cusername+".txt",'w') as result_file:
+				#Write line
+				#print(c)
+				result_file.write(c + "\n")
+				#Close file handle
+				result_file.close()
+				#Print msg to screen
+				print("[*] Output has been written to "+ "/tmp/"+cusername+".txt")
+		#Friendly Error Handler code
+		except Exception as e:
+			print("[!] Doh... Well that didn't work as expected!")
+			print("[!] type error: " + str(e))
 
-				#Write SPN#s out to individual files
-				fout=open(DumpFolder+uname+".txt",'w')
-				#Write details to file
-				fout.write(line)
-				#Close handle
-				fout.close()
+	#
+	#Write all the usernames to file
+	#
+	try:
+		#Open file handler
+		with open("/tmp/spn_usernames.txt",'w') as result_file:
+			#Write line
+			#print(c)
+			for c in contents:
+				#Get username from string
+				cusername=c.split("$")[3][1:]
+				result_file.write(cusername + "\n")
+			
+			#Close file handle
+			result_file.close()
+			#Print msg to screen
+			print("[*] List of usernames has been written to "+ "/tmp/spn_usernames.txt\n")
+	#Friendly Error Handler code
+	except Exception as e:
+		print("[!] Doh... Well that didn't work as expected!")
+		print("[!] type error: " + str(e))
 
-				#Write out all the usernames to file
-				fout=open(DumpFolder+"spn_usernames.txt",'w')
-				for uname in spn_usernames:
-					#Write details to file
-					fout.write(uname+"\n")
-					#Close handle
-				fout.close()
-		
-		print("[*]Number of SPN's in file "+str(len(spn_usernames)))
-		#Print output details
-		print("[*]Check "+DumpFolder+" for parsed output.\n")
-		print("[*]Individual users hash written to file:")
-		#print list of filenames that have been written
-		for u in spn_usernames:
-			print(DumpFolder+u+".txt")
 
-		print("\n[*]Usernames written to file:")
-		print(DumpFolder+"spn_usernames.txt") 
-
-		if os.path.isfile(DumpFolder+"/domain_admins.txt"):
-			print("\n[*]domain_admins.txt file found in "+DumpFolder)
-			with open(DumpFolder+"/domain_admins.txt") as fp:
-				for line in fp:
-					da_list.append(line)
-
-			for uname in spn_usernames:
-				for da in da_list:
-					if uname.rstrip()==da.rstrip():
-						print(uname +" is a Domain Admin")
-
-	else:
-		print("[!]spns.txt not found")
-
-#Routine handles Crtl+C
-def signal_handler(signal, frame):
-	print ("\nCtrl+C pressed.. exiting...")
-	sys.exit()
-
-if __name__ == '__main__':
-	#Setup Signal handler in case of Ctrl+C
-	signal.signal(signal.SIGINT, signal_handler)
-	#Call main routine.
-	main()
+#Friendly Error Handler code
+except Exception as e:
+	print("[!] Doh... Well that didn't work as expected!")
+	print("[!] type error: " + str(e))
