@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-from bs4 import BeautifulSoup
 import argparse
 
 #Define list which we'll use to write to file
@@ -31,18 +30,19 @@ try:
 	output.append("Username,Password")
 
 	for c in contents:
-		startchar=c.find('*')+1
-		endchar=c[startchar:].find('$')
+		#Get username from string
+		cusername=c.split("$")[3][1:]
+		#Get cracked password from string
+		cpassword=c.split(":")[1]
+		#Mask the password
+		maskedpw=(cpassword[:1]+("*"*(len(cpassword)-2))+cpassword[-1:])
 
-		cusername=(c[startchar:(startchar+endchar)])
-
-		delim=c.find(':')
-		cpassword=c[(delim+1):]
-
+		#Display values to screen
 		if args.output=="":
-			print(cusername+" "+cpassword)
+			print(cusername+" "+cpassword+" "+maskedpw)
 		
-		output.append(cusername+","+cpassword)
+		#Add values to CSV output list
+		output.append(cusername+","+cpassword+","+maskedpw)
 
 	#See if we're outputting to file
 	if args.output!="":
